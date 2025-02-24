@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #1a1b2e;
+}
+
+/* Range Slider Styles */
+.range-slider {
+  pointer-events: auto;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #151A2D;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.range-slider::-webkit-slider-thumb::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: rgba(21, 26, 45, 0.2);
+  border-radius: 50%;
+}
+
+.range-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #151A2D;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  border: none;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.modal-box {
+  box-shadow: 0px 0px 50px #999;
+  border: 3px solid #8d78e1;
+}
+
+/* CKEditor Styles */
+.ck-editor__editable {
+  min-height: 200px !important;
+  max-height: 400px !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable {
+  background-color: white !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+.ck.ck-toolbar {
+  border-radius: 8px 8px 0 0 !important;
+  background: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.ck.ck-button {
+  color: #374151 !important;
+}
+
+.ck.ck-button:hover {
+  background: #f3f4f6 !important;
+}
+
+.ck.ck-button.ck-on {
+  background: #e5e7eb !important;
+  color: #1a1b2e !important;
+}
+
+/* Error state */
+.error .ck.ck-editor__main > .ck-editor__editable {
+  border-color: #ef4444 !important;
+}
