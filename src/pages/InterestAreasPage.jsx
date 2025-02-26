@@ -32,7 +32,7 @@ const interestAreas = [
 
 export default function InterestAreasPage({ selectedInterest, onInterestChange, onBack, onNext }) {
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-4xl w-full">
       <h2 className="text-4xl font-bold text-[#1a1b2e] mb-4">
         Define your interest areas
       </h2>
@@ -40,7 +40,7 @@ export default function InterestAreasPage({ selectedInterest, onInterestChange, 
         Share what excites you, and we'll align your passive income plan with your passions!
       </p>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {interestAreas.slice(0, 4).map((interest) => (
           <InterestOption
             key={interest.id}

@@ -45,7 +45,7 @@ export default function ResultPage({ formData, onRegenerate, onNext }) {
   const averageBudget = (formData.budgetMin + formData.budgetMax) / 2;
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl w-full">
       <h2 className="text-4xl font-bold text-[#1a1b2e] mb-4">
         Your Passive Income Journey Starts Here!
       </h2>
@@ -62,7 +62,7 @@ export default function ResultPage({ formData, onRegenerate, onNext }) {
         </p>
 
         <div className="border border-gray-200 rounded-lg p-8">
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h4 className="font-semibold text-lg mb-4">Based on</h4>
               <div className="space-y-3">
@@ -95,7 +95,7 @@ export default function ResultPage({ formData, onRegenerate, onNext }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
           onClick={onRegenerate}
           className="w-full py-3 px-6 rounded-lg border border-[#1a1b2e] text-[#1a1b2e] font-medium"

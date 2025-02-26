@@ -22,7 +22,7 @@ const skillLevels = [
 
 export default function SkillLevelPage({ skillLevel, onSkillChange, onBack, onNext }) {
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl w-full">
       <h2 className="text-4xl font-bold text-[#1a1b2e] mb-4">
         Define your skill level
       </h2>
