@@ -79,7 +79,7 @@ export default function Generator({ isOpen, onClose }) {
     switch(currentStep) {
       case 0:
         return (
-          <div className="max-w-2xl">
+          <div className="max-w-2xl w-full">
             <h2 className="text-4xl font-bold text-[#1a1b2e] mb-4">
               Define your income goal
             </h2>
@@ -157,23 +157,68 @@ export default function Generator({ isOpen, onClose }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <SidebarLayout>
-        {sidebarItems.map((item, index) => (
-          <SidebarItem
-            key={index}
-            {...item}
-            active={index === currentStep}
-            completed={index < currentStep}
-            onClick={() => handleSidebarItemClick(index)}
-            disabled={index > currentStep}
-          />
-        ))}
-      </SidebarLayout>
+    <div className="fixed inset-0 z-50">
+      <div className="h-full flex flex-col lg:flex-row">
+        {/* Steps Progress - Mobile */}
+        <div className="lg:hidden bg-white border-b">
+          <div className="px-5 py-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Step {currentStep + 1} of 6</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="px-5 pb-3 flex items-center gap-2">
+            {sidebarItems.map((_, index) => (
+              <div
+                key={index}
+                className={`flex-1 h-2 rounded-full ${
+                  index <= currentStep ? 'bg-[#1a1b2e]' : 'bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
 
-      <ContentLayout onClose={onClose} reducedPadding={currentStep >= 3}>
-        {renderStep()}
-      </ContentLayout>
-    </Modal>
+        {/* Current Step Info - Mobile */}
+        <div className="lg:hidden bg-white border-b px-5 py-3">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#1a1b2e] rounded-lg flex items-center justify-center text-white">
+              {sidebarItems[currentStep].icon}
+            </div>
+            <div>
+              <h3 className="font-semibold">{sidebarItems[currentStep].title}</h3>
+              <p className="text-sm text-gray-500">{sidebarItems[currentStep].subtitle}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:w-80 lg:flex">
+          <SidebarLayout>
+            {sidebarItems.map((item, index) => (
+              <SidebarItem
+                key={index}
+                {...item}
+                active={index === currentStep}
+                completed={index < currentStep}
+                onClick={() => handleSidebarItemClick(index)}
+                disabled={index > currentStep}
+              />
+            ))}
+          </SidebarLayout>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 bg-white overflow-y-auto">
+          <div className="min-h-full flex items-center justify-center px-5 pt-[50px] pb-6 lg:p-0">
+            <ContentLayout onClose={onClose} reducedPadding={currentStep >= 3}>
+              {renderStep()}
+            </ContentLayout>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
