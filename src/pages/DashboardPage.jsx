@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSupabase } from '../hooks/useSupabase';
 import { supabase } from '../config/supabase';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import Logo from '../components/Logo';
@@ -103,6 +104,7 @@ export default function DashboardPage() {
   const [dashboardProgress, setDashboardProgress] = useState({});
   const [notifications, setNotifications] = useState([]);
   const [profileId, setProfileId] = useState(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -366,6 +368,7 @@ export default function DashboardPage() {
   const handleDashboardChange = (dashboard) => {
     setActiveDashboard(dashboard);
     setIsExpanded(true);
+    setShowMobileMenu(false);
   };
 
   const handleConfirmation = () => {
@@ -525,9 +528,29 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className={`min-h-screen flex ${!isConfirmed ? 'blur-sm' : ''}`}>
+      <div className={`min-h-screen flex flex-col lg:flex-row ${!isConfirmed ? 'blur-sm' : ''}`}>
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white border-b p-4 sticky top-0 z-50">
+          <div className="flex justify-between items-center">
+            <Logo />
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         {/* Left Sidebar */}
-        <div className="w-[350px] bg-white border-r">
+        <div className={`
+          ${showMobileMenu ? 'block' : 'hidden'} 
+          lg:block lg:w-[350px] bg-white border-r
+          fixed lg:relative inset-0 z-40
+          overflow-y-auto pt-[60px] lg:pt-0
+        `}>
           {/* Logo and Action Icons */}
           <div className="p-6 flex justify-between items-center">
             <Logo />
@@ -667,7 +690,7 @@ export default function DashboardPage() {
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8 3.33334V12.6667" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.33334 8H12.6667" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                 <path d="M3.33334 8H12.6667" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className="font-medium">Add An Income Stream</span>
             </button>
@@ -677,7 +700,7 @@ export default function DashboardPage() {
               {/* Cloud Icon */}
               <div className="flex-1 flex items-center justify-center">
                 <svg width="96" height="96" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto">
-                  <path d="M36 28C39.3137 28 42 25.3137 42 22C42 18.6863 39.3137 16 36 16C35.8098 16 35.6215 16.0096 35.4355 16.0284C34.4779 12.5331 31.2793 10 27.5 10C24.7829 10 22. 3577 11.4013 21 13.5C19.6423 11.4013 17.2171 10 14.5 10C9.80558 10 6 13.8056 6 18.5C6 23.1944 9.80558 27 14.5 27H16" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M36 28C39.3137 28 42 25.3137 42 22C42 18.6863 39.3137 16 36 16C35.8098 16 35.6215 16.0096 35.4355 16.0284C34.4779 12.5331 31.2793 10 27.5 10C24.7829 10 22.3577 11.4013 21 13.5C19.6423 11.4013 17.2171 10 14.5 10C9.80558 10 6 13.8056 6 18.5C6 23.1944 9.80558 27 14.5 27H16" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
               <div>
@@ -691,13 +714,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Middle content */}
-        <div className=" flex-1 bg-white p-8">
+        {/* Main Content */}
+        <div className="flex-1 bg-white p-4 lg:p-8">
           <div className="max-w-4xl mx-auto">
             {/* Welcome Section */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6 mb-8">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
                   Welcome back{fullName ? ` ${fullName}` : ''}!
                 </h1>
                 <p className="text-gray-600">Here's what's happening with your projects today.</p>
@@ -705,9 +728,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Roadmap Section */}
-            <div className="mt-8 border border-gray-200 rounded-lg p-6 mb-8">
+            <div className="mt-8 border border-gray-200 rounded-lg p-4 lg:p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">The Roadmap to your success</h2>
+                <h2 className="text-lg lg:text-xl font-semibold">The Roadmap to your success</h2>
               </div>
               {activeDashboard && (
                 <Roadmap 
@@ -730,7 +753,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-[400px] bg-white p-5">
+        <div className="w-full lg:w-[400px] bg-white p-4 lg:p-5 border-t lg:border-t-0 lg:border-l">
           <div className="bg-[#1a1b2e] p-6 rounded-[10px]">
             <div className="bg-[#20273f] rounded-xl p-4 mb-6">
               <div className="flex items-center gap-3 mb-6">
@@ -822,7 +845,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Notifications Section */}
-          <div className="mt-6 bg-white p-6 rounded-[10px] border border-gray-200">
+          <div className="mt-6 bg-white p-4 lg:p-6 rounded-[10px] border border-gray-200">
             <h3 className="text-lg font-semibold mb-4">Notifications</h3>
             
             <div className="space-y-4">

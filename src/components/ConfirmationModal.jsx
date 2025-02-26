@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../config/supabase';
 import { getWelcomeEmailTemplate } from '../utils/emailTemplates';
+import { sendEmail } from '../services/api';
 
 export default function ConfirmationModal({ onConfirm }) {
   const [code, setCode] = useState('');
@@ -46,7 +47,8 @@ export default function ConfirmationModal({ onConfirm }) {
 
     try {
       // Get user data
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
       if (!user) throw new Error('User not found');
 
       // Get profile data
@@ -58,30 +60,26 @@ export default function ConfirmationModal({ onConfirm }) {
       if (profileError) throw profileError;
 
       // Get email template
-      const { subject, html } = getWelcomeEmailTemplate(
+      const emailData = getWelcomeEmailTemplate(
         user.user_metadata?.full_name || 'User',
         profile.confirmation_code
       );
 
-      // Send email using Supabase resetPasswordForEmail
-      const { error: emailError } = await supabase.auth.resetPasswordForEmail(
-        user.email,
-        {
-          data: {
-            subject,
-            template_data: {
-              content: html
-            }
-          }
-        }
-      );
+      // Add recipient email to the template data
+      emailData.to = user.email;
 
-      if (emailError) throw emailError;
+      // Send email using Resend
+      const { success, error: emailError } = await sendEmail(emailData);
+
+      if (!success || emailError) {
+        throw new Error(emailError || 'Failed to send confirmation email');
+      }
 
       // Show success message
       setError('Confirmation code has been resent to your email');
     } catch (err) {
-      setError(err.message);
+      console.error('Error resending code:', err);
+      setError(err.message || 'Failed to resend confirmation code');
     } finally {
       setIsResending(false);
     }
@@ -154,7 +152,7 @@ export default function ConfirmationModal({ onConfirm }) {
               ) : (
                 <>
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <span>Resend confirmation code</span>
                 </>

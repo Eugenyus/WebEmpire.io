@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import Logo from '../../components/Logo';
@@ -6,6 +6,7 @@ import Logo from '../../components/Logo';
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -42,54 +43,74 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r flex-shrink-0">
-        <div className="p-6 border-b flex justify-between items-center">
+    <div className="min-h-screen flex flex-col">
+      {/* Top Bar */}
+      <div className="bg-white border-b p-4 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          </button>
           <Logo />
-          <div className="flex items-center gap-2">
-            <Link
-              to="/"
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors border border-gray-200 w-[50px] h-[50px] flex items-center justify-center"
-              title="Back to Home"
-            >
-              <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </Link>
-            <button
-              onClick={handleSignOut}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors border border-gray-200 w-[50px] h-[50px] flex items-center justify-center"
-              title="Sign Out"
-            >
-              <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
         </div>
-        <nav className="mt-6">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center px-6 py-4 text-sm ${
-                location.pathname === item.path
-                  ? 'bg-[#1a1b2e] text-white'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {item.icon}
-              <span className="ml-3">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/"
+            className="p-2 hover:bg-gray-100 rounded-full border border-gray-200 w-[50px] h-[50px] flex items-center justify-center"
+            title="Back to Home"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          </Link>
+          <button
+            onClick={handleSignOut}
+            className="p-2 hover:bg-gray-100 rounded-full border border-gray-200 w-[50px] h-[50px] flex items-center justify-center"
+            title="Sign Out"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 bg-gray-50 overflow-auto">
-        <div className="container mx-auto px-4 py-8">
-          <Outlet />
+      <div className="flex-1 flex">
+        {/* Sidebar */}
+        <div className={`
+          ${isSidebarOpen ? 'block' : 'hidden'} 
+          lg:block w-64 bg-white border-r flex-shrink-0
+          fixed lg:relative inset-y-0 left-0 z-40 mt-[73px] lg:mt-0
+          overflow-y-auto
+        `}>
+          <nav className="mt-6">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex items-center px-6 py-4 text-sm ${
+                  location.pathname === item.path
+                    ? 'bg-[#1a1b2e] text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {item.icon}
+                <span className="ml-3">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 bg-gray-50 overflow-auto">
+          <div className="container mx-auto px-4 py-8">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>

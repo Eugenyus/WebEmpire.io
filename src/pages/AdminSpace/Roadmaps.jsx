@@ -360,7 +360,7 @@ export default function Roadmaps() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -401,11 +401,27 @@ export default function Roadmaps() {
       />
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Roadmaps</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Roadmaps</h1>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
+      {/* Mobile Selector */}
+      <div className="lg:hidden mb-6">
+        <select
+          value={activeTab || ''}
+          onChange={(e) => setActiveTab(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1b2e]"
+        >
+          <option value="" disabled>Select Interest Area</option>
+          {interestAreas.map((area) => (
+            <option key={area.id} value={area.id}>
+              {area.title}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Desktop Tabs */}
+      <div className="hidden lg:block border-b border-gray-200 mb-6">
         <div className="flex space-x-8">
           {interestAreas.map((area) => (
             <button
@@ -428,7 +444,7 @@ export default function Roadmaps() {
         {activeTab && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
                 {interestAreas.find(area => area.id === activeTab)?.title} Roadmap
               </h2>
               <button
@@ -458,7 +474,7 @@ export default function Roadmaps() {
                     onDragLeave={handleDragLeave}
                     onDrop={() => handleDrop(task)}
                     className={`
-                      bg-white border rounded-lg p-6 cursor-move transition-all duration-200
+                      bg-white border rounded-lg p-4 lg:p-6 cursor-move transition-all duration-200
                       ${draggedTask?.id === task.id ? 'opacity-50' : ''}
                       ${dragOverTask?.id === task.id ? 'border-[#1a1b2e] border-2 shadow-lg' : 'hover:shadow-md'}
                       ${dragOverTask?.id === task.id ? 'transform scale-[1.02]' : ''}

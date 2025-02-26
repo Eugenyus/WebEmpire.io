@@ -89,10 +89,10 @@ export default function RegistrationPage({ onCancel, formData: registrationData,
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-white" style={{ paddingBottom: '10vh' }}>
-      <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-xl border border-gray-200">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white p-4">
+      <div className="max-w-xl w-full space-y-8 bg-white p-6 md:p-10 rounded-xl border border-gray-200">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#1a1b2e] mb-3">Almost there!</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1b2e] mb-3">Almost there!</h1>
           <p className="text-gray-600">
             Enter your details to receive your personalized blueprint
           </p>
@@ -155,7 +155,7 @@ export default function RegistrationPage({ onCancel, formData: registrationData,
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               type="button"
               onClick={onCancel}

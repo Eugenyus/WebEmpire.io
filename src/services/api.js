@@ -1,30 +1,70 @@
-const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3000';
+const API_URL = 'https://genisys.ro/smtp/';
 
-export const sendEmail = async ({ to, subject, html }) => {
+import { getTestEmailTemplate } from '../components/email/TestEmailTemplate';
+import { getPasswordResetTemplate } from '../components/email/PasswordResetTemplate';
+
+export const sendEmail = async ({ name, email, html_message, subject }) => {
   try {
-    const response = await fetch(`${API_URL}/api/email`, {
+    if (!email || !html_message || !subject) {
+      throw new Error('Missing required email fields');
+    }
+
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        to, 
-        subject, 
-        html
+      body: JSON.stringify({
+        name,
+        email,
+        subject,
+        message: html_message
       })
     });
     
     if (!response.ok) {
-      const data = await response.json();
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`Failed to send email: ${errorText}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
       throw new Error(data.error || 'Failed to send email');
     }
     
-    return { success: true };
+    return { 
+      success: true, 
+      data: data.data 
+    };
   } catch (error) {
-    console.error('Email sending failed:', error);
+    console.error('Email sending error:', error.message);
     return { 
       success: false, 
-      error: error.message || 'Network error occurred'
+      error: error.message || 'Failed to send email'
     };
   }
 };
+
+export const sendTestEmail = async (email) => {
+  return sendEmail({
+    name: 'WebEmpire Test',
+    email,
+    subject: 'Test Email from WebEmpire',
+    html_message: getTestEmailTemplate()
+  });
+};
+
+export const sendPasswordResetEmail = async (email) => {
+  // Generate reset URL with the current origin
+  const resetUrl = `${window.location.origin}/reset-password`;
+
+  return sendEmail({
+    name: 'WebEmpire Password Reset',
+    email,
+    subject: 'Reset Your WebEmpire Password',
+    html_message: getPasswordResetTemplate(resetUrl)
+  });
+};
+
+export { API_URL };

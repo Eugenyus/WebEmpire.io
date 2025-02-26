@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
+import { sendPasswordResetEmail } from '../services/api';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -61,25 +62,15 @@ export default function LoginPage() {
         throw new Error('Please enter your email address');
       }
 
-      const resetUrl = `${window.location.origin}/reset-password`;
-      
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          resetUrl
-        }),
-      });
+      // Send reset password email
+      const { success, error: emailError } = await sendPasswordResetEmail(formData.email);
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to send reset password email');
+      if (!success) {
+        throw new Error(emailError || 'Failed to send reset password email');
       }
 
       setResetSent(true);
+      setError(null);
     } catch (err) {
       console.error('Reset password error:', err);
       setError(err.message || 'Failed to send reset password email. Please try again.');

@@ -17,13 +17,19 @@ export default function AddToCalendarModal({ isOpen, onClose, stepTitle, dashboa
     setError(null);
 
     try {
+      if (!profileId || !dashboardId) {
+        throw new Error('Missing required profile or dashboard information');
+      }
+
       // First check if this step is already in the calendar
-      const { data: existingEntries } = await supabase
+      const { data: existingEntries, error: checkError } = await supabase
         .from('user_calendar')
         .select('*')
         .eq('profile_id', profileId)
         .eq('dashboard_id', dashboardId)
         .eq('title', formData.title);
+
+      if (checkError) throw checkError;
 
       if (existingEntries?.length > 0) {
         throw new Error('This step is already added to your calendar');
@@ -35,8 +41,8 @@ export default function AddToCalendarModal({ isOpen, onClose, stepTitle, dashboa
         .insert({
           profile_id: profileId,
           dashboard_id: dashboardId,
-          title: formData.title,
-          description: formData.description,
+          title: formData.title.trim(),
+          description: formData.description.trim(),
           date: new Date(formData.date).toISOString()
         });
 
@@ -44,7 +50,7 @@ export default function AddToCalendarModal({ isOpen, onClose, stepTitle, dashboa
       onClose();
     } catch (err) {
       console.error('Error adding to calendar:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to add to calendar. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

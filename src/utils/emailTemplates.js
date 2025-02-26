@@ -1,5 +1,6 @@
 export const getWelcomeEmailTemplate = (fullName, confirmationCode) => {
   return {
+    from: 'WebEmpire <onboarding@resend.dev>',
     subject: 'Welcome to Web Empire - Please Confirm Your Account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -35,8 +36,9 @@ export const getWelcomeEmailTemplate = (fullName, confirmationCode) => {
   };
 };
 
-export const getPasswordResetTemplate = (fullName) => {
+export const getPasswordResetTemplate = (fullName, resetUrl) => {
   return {
+    from: 'WebEmpire <onboarding@resend.dev>',
     subject: 'Reset Your Web Empire Password',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -51,7 +53,7 @@ export const getPasswordResetTemplate = (fullName) => {
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="{{ .ConfirmationURL }}" 
+          <a href="${resetUrl}" 
              style="background-color: #1a1b2e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
             Reset Password
           </a>
