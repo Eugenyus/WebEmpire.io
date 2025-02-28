@@ -96,3 +96,13 @@ body {
 .error .ck.ck-editor__main > .ck-editor__editable {
   border-color: #ef4444 !important;
 }
+
+/* Roadmap step content links */
+.prose a {
+  color: #3b82f6 !important;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: #2563eb !important;
+}

@@ -2,6 +2,7 @@ const API_URL = 'https://genisys.ro/smtp/';
 
 import { getTestEmailTemplate } from '../components/email/TestEmailTemplate';
 import { getPasswordResetTemplate } from '../components/email/PasswordResetTemplate';
+import { createPasswordResetToken } from '../utils/passwordReset';
 
 export const sendEmail = async ({ name, email, html_message, subject }) => {
   try {
@@ -56,15 +57,34 @@ export const sendTestEmail = async (email) => {
 };
 
 export const sendPasswordResetEmail = async (email) => {
-  // Generate reset URL with the current origin
-  const resetUrl = `${window.location.origin}/reset-password`;
+  try {
+    // Create a reset token and store it in the database
+    const { success, token, error } = await createPasswordResetToken(email);
+    
+    if (!success || !token) {
+      throw new Error(error || 'Failed to create reset token');
+    }
+    
+    // Generate reset URL with the token
+    const resetUrl = `${window.location.origin}/reset-password?token=${token}`;
 
-  return sendEmail({
-    name: 'WebEmpire Password Reset',
-    email,
-    subject: 'Reset Your WebEmpire Password',
-    html_message: getPasswordResetTemplate(resetUrl)
-  });
+    // Send the email with the reset link
+    const emailResult = await sendEmail({
+      name: 'WebEmpire Password Reset',
+      email,
+      subject: 'Reset Your WebEmpire Password',
+      html_message: getPasswordResetTemplate(resetUrl)
+    });
+
+    if (!emailResult.success) {
+      throw new Error(emailResult.error || 'Failed to send password reset email');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Password reset email error:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 export { API_URL };

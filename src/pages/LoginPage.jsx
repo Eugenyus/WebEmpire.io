@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { sendPasswordResetEmail } from '../services/api';
+import Navbar from '../components/Navbar';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -80,84 +81,87 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#1a1b2e] mb-3">Welcome Back!</h1>
-          <p className="text-gray-600">Please enter your details to sign in</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg">
-            {error}
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center bg-gray-100">
+        <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-[#1a1b2e] mb-3">Welcome Back!</h1>
+            <p className="text-gray-600">Please enter your details to sign in</p>
           </div>
-        )}
 
-        {resetSent && (
-          <div className="bg-green-50 text-green-600 p-4 rounded-lg">
-            Password reset instructions have been sent to your email.
-          </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={showResetPassword ? handleResetPassword : handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#1a1b2e] focus:border-[#1a1b2e]"
-                disabled={isLoading}
-              />
+          {error && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+              {error}
             </div>
+          )}
 
-            {!showResetPassword && (
+          {resetSent && (
+            <div className="bg-green-50 text-green-600 p-4 rounded-lg">
+              Password reset instructions have been sent to your email.
+            </div>
+          )}
+
+          <form className="mt-8 space-y-6" onSubmit={showResetPassword ? handleResetPassword : handleSubmit}>
+            <div className="space-y-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email
                 </label>
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
+                  id="email"
+                  name="email"
+                  type="email"
                   required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#1a1b2e] focus:border-[#1a1b2e]"
                   disabled={isLoading}
                 />
               </div>
-            )}
-          </div>
 
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={() => {
-                setShowResetPassword(!showResetPassword);
-                setError(null);
-                setResetSent(false);
-              }}
-              className="text-sm text-[#1a1b2e] hover:underline"
-            >
-              {showResetPassword ? 'Back to Login' : 'Forgot Password?'}
-            </button>
+              {!showResetPassword && (
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#1a1b2e] focus:border-[#1a1b2e]"
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+            </div>
 
-            <button
-              type="submit"
-              className="px-6 py-2 bg-[#1a1b2e] text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Processing...' : (showResetPassword ? 'Reset Password' : 'Sign In')}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowResetPassword(!showResetPassword);
+                  setError(null);
+                  setResetSent(false);
+                }}
+                className="text-sm text-[#1a1b2e] hover:underline"
+              >
+                {showResetPassword ? 'Back to Login' : 'Forgot Password?'}
+              </button>
+
+              <button
+                type="submit"
+                className="px-6 py-2 bg-[#1a1b2e] text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : (showResetPassword ? 'Reset Password' : 'Sign In')}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

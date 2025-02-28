@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminSpace/AdminDashboard';
 import UsersManagement from './pages/AdminSpace/UsersManagement';
 import InterestAreas from './pages/AdminSpace/Settings/InterestAreas';
 import Roadmaps from './pages/AdminSpace/Roadmaps';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import './index.css';
 
 // Protected Route component
@@ -32,6 +33,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route 
           path="/workspace" 
           element={
