@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+import { updateUserInfo } from '../../utils/userUpdate';
 
 export default function UsersManagement() {
   const [activeTab, setActiveTab] = useState('users');
@@ -70,71 +71,53 @@ export default function UsersManagement() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  setError(null);
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-  try {
-    const updates = {};
+    try {
+      // Update full_name in the profiles table
+      if (formData.full_name !== editingUser.full_name) {
+        const { error: profileUpdateError } = await supabase
+          .from('profiles')
+          .update({ full_name: formData.full_name })
+          .eq('id', editingUser.id);
 
-    // Only update full_name in the profiles table
-    if (formData.full_name !== editingUser.full_name) {
-      updates.full_name = formData.full_name;
+        if (profileUpdateError) throw profileUpdateError;
+      }
+
+      // Always pass both email and phone to updateUserInfo
+      // This ensures both fields are properly updated
+      const { success, error: updateError } = await updateUserInfo(
+        editingUser.user_id,
+        {
+          email: formData.email,
+          phone: formData.phone
+        }
+      );
+
+      if (!success) throw new Error(updateError || 'Failed to update user information');
+
+      // Update password if provided
+      if (formData.password) {
+        const { error: passwordError } = await supabase.rpc('update_user_password', {
+          user_id: editingUser.user_id,
+          new_password: formData.password
+        });
+
+        if (passwordError) throw passwordError;
+      }
+
+      // Refresh users list
+      await fetchUsers();
+      setShowEditModal(false);
+    } catch (err) {
+      console.error('Error updating user:', err);
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Only update phone in both profiles and auth.users table
-    if (formData.phone !== editingUser.phone) {
-      updates.phone = formData.phone;
-    }
-
-    // Update profiles table
-    if (Object.keys(updates).length > 0) {
-      // Update profiles table
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: updates.full_name,
-          phone: updates.phone,
-          email: updates.email
-        })
-        .eq('id', editingUser.id);
-
-      if (profileUpdateError) throw profileUpdateError;
-
-      // Update phone in auth.users table
-
-      try {
-  const { data, error } = await supabase.rpc('update_user_phone', {
-    user_id: editingUser.user_id,
-    phone: updates.phone
-  });
-  
-  if (error) throw error;
-  // Phone updated successfully
-} catch (err) {
-  console.error('Error updating phone:', err);
-}
-      
-      // if (updates.phone) {
-      //   const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
-      //     editingUser.user_id,
-      //     { phone: updates.phone }
-      //   );
-      //   if (authUpdateError) throw authUpdateError;
-      // }
-      
-    }
-
-    // Refresh users list
-    await fetchUsers();
-    setShowEditModal(false);
-  } catch (err) {
-    console.error('Error updating user:', err);
-    setError(err.message);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="p-8">
@@ -242,7 +225,7 @@ export default function UsersManagement() {
                 </label>
                 <input
                   type="tel"
-                  value={formData.phone}
+                  value={formData.phone || ''}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1b2e]"
                 />
