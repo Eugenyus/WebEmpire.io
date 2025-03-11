@@ -13,7 +13,6 @@ export default function RoadmapStep({
   onToggle, 
   isFirst, 
   isLast,
-  isAccessible,
   video_links = [],
   onNext,
   dashboardId,
@@ -32,10 +31,10 @@ export default function RoadmapStep({
   const quizErrorRef = useRef(null);
 
   React.useEffect(() => {
-    if (isExpanded && isAccessible) {
+    if (isExpanded) {
       fetchQuizItems();
     }
-  }, [isExpanded, isAccessible]);
+  }, [isExpanded]);
 
   React.useEffect(() => {
     if (quizResults && !quizResults.allCorrect && quizErrorRef.current) {
@@ -253,6 +252,52 @@ export default function RoadmapStep({
     }
   };
 
+  const handleActionButton = () => {
+    if (status === 'not_started') {
+      onStatusChange('in_progress');
+    } else if (status === 'in_progress') {
+      onStatusChange('completed');
+    }
+  };
+
+  const getActionButtonLabel = () => {
+    if (status === 'not_started') {
+      return 'Put in Progress';
+    } else if (status === 'in_progress') {
+      return 'Complete this step';
+    }
+    return '';
+  };
+
+  const getVideoEmbedUrl = (url) => {
+    try {
+      const videoUrl = new URL(url);
+      
+      // YouTube
+      if (videoUrl.hostname.includes('youtube.com') || videoUrl.hostname.includes('youtu.be')) {
+        let videoId = '';
+        if (videoUrl.hostname.includes('youtu.be')) {
+          videoId = videoUrl.pathname.slice(1);
+        } else {
+          videoId = videoUrl.searchParams.get('v');
+        }
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      
+      // Vimeo
+      if (videoUrl.hostname.includes('vimeo.com')) {
+        const videoId = videoUrl.pathname.slice(1);
+        return `https://player.vimeo.com/video/${videoId}`;
+      }
+      
+      // Return null if the URL is not supported
+      return null;
+    } catch (err) {
+      console.error('Invalid video URL:', err);
+      return null;
+    }
+  };
+
   return (
     <>
       {showWarningModal && (
@@ -282,7 +327,7 @@ export default function RoadmapStep({
         profileId={profileId}
       />
 
-      <div className={`relative pl-8 ${!isAccessible ? 'opacity-50' : ''}`}>
+      <div className="relative pl-8">
         <div 
           className={`absolute left-[11px] w-[2px] bg-[#e0e2e7] ${
             isFirst && isLast ? 'top-2 bottom-2' : 
@@ -315,7 +360,7 @@ export default function RoadmapStep({
             <div className="flex-1">
               <h3 className="text-lg font-semibold">{title}</h3>
               <div className="flex items-center gap-3">
-                {isExpanded && isAccessible ? (
+                {isExpanded ? (
                   <>
                     <select
                       value={status}
@@ -384,9 +429,8 @@ export default function RoadmapStep({
                 </div>
               )}
               <button 
-                className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0 ${isAccessible ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
                 onClick={onToggle}
-                disabled={!isAccessible}
               >
                 <svg 
                   className={`w-6 h-6 text-gray-600 transform transition-transform ${isExpanded ? 'rotate-0' : 'rotate-180'}`} 
@@ -399,7 +443,7 @@ export default function RoadmapStep({
             </div>
           </div>
 
-          {isExpanded && isAccessible && (
+          {isExpanded && (
             <div className="px-6 pb-6">
               <div 
                 className="prose max-w-none text-gray-600 mb-4 whitespace-pre-wrap" 
@@ -409,19 +453,36 @@ export default function RoadmapStep({
               <div className="space-y-6">
                 {video_links?.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Video Resources</h4>
-                    <div className="space-y-2">
-                      {video_links.map((video, index) => (
-                        <a
-                          key={index}
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-blue-600 hover:text-blue-800"
-                        >
-                          Video {index + 1}
-                        </a>
-                      ))}
+                    <h4 className="font-medium text-gray-900 mb-4">Video Resources</h4>
+                    <div className="space-y-4">
+                      {video_links.map((video, index) => {
+                        const embedUrl = getVideoEmbedUrl(video.url);
+                        if (embedUrl) {
+                          return (
+                            <div key={index} className="aspect-w-16 aspect-h-9">
+                              <iframe
+                                src={embedUrl}
+                                title={`Video ${index + 1}`}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="w-full h-[400px] rounded-lg"
+                              />
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <a
+                              key={index}
+                              href={video.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-blue-600 hover:text-blue-800"
+                            >
+                              Video {index + 1} (External Link)
+                            </a>
+                          );
+                        }
+                      })}
                     </div>
                   </div>
                 )}
@@ -552,6 +613,24 @@ export default function RoadmapStep({
                   profileId={profileId}
                   onAllCompleted={handleChecklistComplete}
                 />
+
+                {/* Action Buttons */}
+                {(status === 'not_started' || status === 'in_progress') && (
+                  <div className="mt-6 flex justify-end space-x-4">
+                    <button
+                      onClick={() => onStatusChange('skipped')}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      Skip this step
+                    </button>
+                    <button
+                      onClick={handleActionButton}
+                      className="px-4 py-2 bg-[#6B46FE] text-white rounded-lg hover:bg-opacity-90"
+                    >
+                      {getActionButtonLabel()}
+                    </button>
+                  </div>
+                )}
 
                 {status === 'completed' && onNext && (
                   <div className="mt-6 flex justify-end">

@@ -9,6 +9,8 @@ import AdminDashboard from './pages/AdminSpace/AdminDashboard';
 import UsersManagement from './pages/AdminSpace/UsersManagement';
 import InterestAreas from './pages/AdminSpace/Settings/InterestAreas';
 import Roadmaps from './pages/AdminSpace/Roadmaps';
+import Notifications from './pages/AdminSpace/Notifications';
+import Settings from './pages/AdminSpace/Settings';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import './index.css';
 
@@ -55,7 +57,9 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UsersManagement />} />
           <Route path="settings/interest-areas" element={<InterestAreas />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="roadmaps" element={<Roadmaps />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>
     </Router>

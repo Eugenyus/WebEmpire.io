@@ -188,17 +188,7 @@ export default function Roadmap({ interestArea, onProgressUpdate }) {
     }
   };
 
-  const handleToggleStep = (stepId, index) => {
-    // Check if previous step is completed or skipped
-    if (index > 0) {
-      const previousStepId = steps[index - 1].id;
-      const previousStepStatus = userProgress[previousStepId];
-      
-      if (!previousStepStatus || (previousStepStatus !== 'completed' && previousStepStatus !== 'skipped')) {
-        return; // Don't allow expanding if previous step isn't completed or skipped
-      }
-    }
-    
+  const handleToggleStep = (stepId) => {
     setExpandedStepId(expandedStepId === stepId ? null : stepId);
   };
 
@@ -225,13 +215,6 @@ export default function Roadmap({ interestArea, onProgressUpdate }) {
 
   const getRemainingSteps = () => {
     return steps.length - visibleSteps;
-  };
-
-  const isStepAccessible = (index) => {
-    if (index === 0) return true;
-    const previousStepId = steps[index - 1].id;
-    const previousStepStatus = userProgress[previousStepId];
-    return previousStepStatus === 'completed' || previousStepStatus === 'skipped';
   };
 
   if (loading && !steps.length) {
@@ -272,10 +255,9 @@ export default function Roadmap({ interestArea, onProgressUpdate }) {
               status={userProgress[step.id] || 'not_started'}
               onStatusChange={(newStatus) => handleStatusChange(step.id, newStatus)}
               isExpanded={expandedStepId === step.id}
-              onToggle={() => handleToggleStep(step.id, index)}
+              onToggle={() => handleToggleStep(step.id)}
               isFirst={index === 0}
               isLast={index === visibleSteps - 1}
-              isAccessible={isStepAccessible(index)}
               video_links={step.video_links}
               onNext={() => handleNextStep(index)}
               dashboardId={dashboardId}
