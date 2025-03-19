@@ -15,18 +15,23 @@ export default function ConfirmationModal({ onConfirm }) {
     setIsLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('confirmation_code')
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (profileError) throw profileError;
+      if (!profile) throw new Error('Profile not found');
 
       if (profile.confirmation_code === code.toUpperCase()) {
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ confirmation: 1 })
-          .eq('confirmation_code', code.toUpperCase());
+          .eq('user_id', user.id);
 
         if (updateError) throw updateError;
         
@@ -55,9 +60,11 @@ export default function ConfirmationModal({ onConfirm }) {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('confirmation_code')
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (profileError) throw profileError;
+      if (!profile) throw new Error('Profile not found');
 
       // Get email template
       const emailData = getWelcomeEmailTemplate(

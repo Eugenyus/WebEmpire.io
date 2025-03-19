@@ -1,70 +1,86 @@
-import React from 'react';
+import React, { useState } from 'react';
 import NavigationButtons from '../components/NavigationButtons';
-import InterestOption from '../components/InterestAreas/InterestOption';
+import { validateClickFunnelsOrder, checkInterestArea } from '../services/clickfunnels';
 
-const interestAreas = [
-  {
-    id: 'affiliate',
-    title: 'Affiliate Marketing',
-    description: 'Learn how to earn commissions by promoting products you love.'
-  },
-  {
-    id: 'digital',
-    title: 'Digital Products',
-    description: 'Turn your ideas into income by crafting and selling digital products that inspire.'
-  },
-  {
-    id: 'dropshipping',
-    title: 'Dropshipping',
-    description: 'Build a hassle-free online store—no inventory needed'
-  },
-  {
-    id: 'nocode',
-    title: 'No-Code Development',
-    description: 'Build apps and websites effortlessly without writing a single line of code.'
-  },
-  {
-    id: 'trading',
-    title: 'Trading',
-    description: 'Learn how to grow your income through smart investments tailored to your risk level.'
-  }
-];
+export default function InterestAreasPage({ selectedInterest, orderId: initialOrderId, onInterestChange, onBack, onNext }) {
+  const [orderId, setOrderId] = useState(initialOrderId || '');
+  const [isValidating, setIsValidating] = useState(false);
+  const [error, setError] = useState(null);
 
-export default function InterestAreasPage({ selectedInterest, onInterestChange, onBack, onNext }) {
+  const handleContinue = async () => {
+    try {
+      setIsValidating(true);
+      setError(null);
+
+      // Validate order ID format
+      if (!orderId.trim()) {
+        throw new Error('Please enter an order ID');
+      }
+
+      // Validate the order ID with ClickFunnels
+      const result = await validateClickFunnelsOrder(orderId.trim());
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to validate order');
+      }
+
+      if (!result.exists) {
+        throw new Error('This order ID is invalid.');
+      }
+
+      // Check if the product matches any interest area
+      const interestAreaId = await checkInterestArea(result.productId);
+
+      if (!interestAreaId || interestAreaId === 'none') {
+        throw new Error('This order is not associated with any valid interest area');
+      }
+
+      // Set the interest area and continue
+      onInterestChange(interestAreaId, orderId.trim());
+      onNext();
+    } catch (error) {
+      console.error('Validation error:', error);
+      setError(error.message);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   return (
-    <div className="max-w-4xl w-full">
+    <div className="max-w-2xl w-full">
       <h2 className="text-4xl font-bold text-[#1a1b2e] mb-4">
-        Define your interest areas
+        Enter your Order ID
       </h2>
       <p className="text-gray-600 text-lg mb-8">
-        Share what excites you, and we'll align your passive income plan with your passions!
+        Please enter your order ID to validate your purchase.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {interestAreas.slice(0, 4).map((interest) => (
-          <InterestOption
-            key={interest.id}
-            {...interest}
-            selected={selectedInterest === interest.id}
-            onChange={onInterestChange}
-          />
-        ))}
-      </div>
-      
       <div className="mb-8">
-        {interestAreas.slice(4).map((interest) => (
-          <InterestOption
-            key={interest.id}
-            {...interest}
-            selected={selectedInterest === interest.id}
-            onChange={onInterestChange}
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Order ID
+          </label>
+          <input
+            type="text"
+            value={orderId}
+            onChange={(e) => setOrderId(e.target.value)}
+            placeholder="Enter your order ID"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1b2e] focus:border-[#1a1b2e]"
           />
-        ))}
+
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg">
+              {error}
+            </div>
+          )}
+        </div>
       </div>
 
       <NavigationButtons 
         onBack={onBack}
-        onNext={onNext}
+        onNext={handleContinue}
+        nextLabel={isValidating ? 'Checking...' : 'Check and Continue'}
+        fullWidth={true}
       />
     </div>
   );

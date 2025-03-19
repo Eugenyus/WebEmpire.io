@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { generatePassword } from '../utils/password';
 import { generateConfirmationCode } from '../utils/confirmationCode';
 import { supabase } from '../config/supabase';
+import { sendRegistrationEmail } from '../services/api';
 
 export default function RegistrationPage({ onCancel, formData: registrationData, onClose }) {
   const navigate = useNavigate();
@@ -41,6 +42,8 @@ export default function RegistrationPage({ onCancel, formData: registrationData,
         .from('profiles')
         .insert({
           user_id: authData.user.id,
+          full_name: formData.fullName,
+          email: formData.email,
           income_min: registrationData.incomeMin,
           income_max: registrationData.incomeMax,
           time_commitment: registrationData.timeCommitment,
@@ -69,7 +72,20 @@ export default function RegistrationPage({ onCancel, formData: registrationData,
 
       if (dashboardError) throw dashboardError;
 
-      // 4. Sign in the user
+      // 4. Send registration email
+      const { success: emailSuccess, error: emailError } = await sendRegistrationEmail(
+        formData.fullName,
+        formData.email,
+        formData.password,
+        confirmationCode
+      );
+
+      if (!emailSuccess) {
+        console.error('Failed to send registration email:', emailError);
+        // Don't throw here - we want to continue even if email fails
+      }
+
+      // 5. Sign in the user
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password

@@ -5,7 +5,7 @@ import { findProfileByEmail } from './emailSync';
  * Generates a random token for password reset
  * @returns {string} A random token
  */
-export const generateResetToken = () => {
+const generateResetToken = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const tokenLength = 32;
   let token = '';

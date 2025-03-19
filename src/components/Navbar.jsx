@@ -5,14 +5,14 @@ import { supabase } from '../config/supabase';
 import Logo from './Logo';
 
 export default function Navbar() {
-  const { session } = useSupabase();
+  const { session, loading } = useSupabase();
   const navigate = useNavigate();
   const [userRole, setUserRole] = React.useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   React.useEffect(() => {
     const getUserRole = async () => {
-      if (session?.user) {
+      if (!loading && session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
@@ -26,7 +26,7 @@ export default function Navbar() {
     };
 
     getUserRole();
-  }, [session]);
+  }, [session, loading]);
 
   const handleSignOut = async () => {
     try {
@@ -57,7 +57,7 @@ export default function Navbar() {
         <Link to="#" className="text-gray-700">Product</Link>
         <Link to="#" className="text-gray-700">Pricing</Link>
         <Link to="#" className="text-gray-700">About</Link>
-        {session ? (
+        {!loading && session ? (
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">
             <Link 
               to={userRole === 'admin' ? '/adminspace' : '/workspace'} 

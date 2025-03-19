@@ -14,7 +14,8 @@ export default function InterestAreas() {
   const [formData, setFormData] = useState({
     id: '',
     title: '',
-    description: ''
+    description: '',
+    cf_product_id: ''
   });
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function InterestAreas() {
 
       // Validate form data
       if (!formData.id || !formData.title || !formData.description) {
-        throw new Error('All fields are required');
+        throw new Error('Title and description are required');
       }
 
       // Format the ID
@@ -59,7 +60,8 @@ export default function InterestAreas() {
           .from('interest_areas')
           .update({
             title: formData.title,
-            description: formData.description
+            description: formData.description,
+            cf_product_id: formData.cf_product_id || null
           })
           .eq('id', editingArea);
 
@@ -71,7 +73,8 @@ export default function InterestAreas() {
           .insert([{
             id: formattedId,
             title: formData.title,
-            description: formData.description
+            description: formData.description,
+            cf_product_id: formData.cf_product_id || null
           }]);
 
         if (insertError) {
@@ -84,7 +87,7 @@ export default function InterestAreas() {
       }
 
       // Reset form and refresh data
-      setFormData({ id: '', title: '', description: '' });
+      setFormData({ id: '', title: '', description: '', cf_product_id: '' });
       setIsEditing(false);
       setEditingArea(null);
       await fetchInterestAreas();
@@ -100,7 +103,8 @@ export default function InterestAreas() {
     setFormData({
       id: area.id,
       title: area.title,
-      description: area.description
+      description: area.description,
+      cf_product_id: area.cf_product_id || ''
     });
     setIsEditing(true);
     setEditingArea(area.id);
@@ -131,7 +135,7 @@ export default function InterestAreas() {
   };
 
   const handleCancel = () => {
-    setFormData({ id: '', title: '', description: '' });
+    setFormData({ id: '', title: '', description: '', cf_product_id: '' });
     setIsEditing(false);
     setEditingArea(null);
     setError(null);
@@ -246,6 +250,18 @@ export default function InterestAreas() {
                 placeholder="Enter a brief description..."
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                CF Product ID
+              </label>
+              <input
+                type="text"
+                value={formData.cf_product_id}
+                onChange={(e) => setFormData({ ...formData, cf_product_id: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1b2e]"
+                placeholder="Enter ClickFunnels product ID..."
+              />
+            </div>
           </div>
           <div className="mt-6 flex justify-end space-x-4">
             <button
@@ -268,15 +284,17 @@ export default function InterestAreas() {
 
       {/* List */}
       <div className="bg-white rounded-lg border">
-        <div className="grid grid-cols-[1fr,2fr,auto] gap-4 p-4 border-b bg-gray-50 font-medium">
+        <div className="grid grid-cols-[1fr,2fr,1fr,auto] gap-4 p-4 border-b bg-gray-50 font-medium">
           <div>Title</div>
           <div>Description</div>
+          <div>CF Product ID</div>
           <div className="w-24">Actions</div>
         </div>
         {interestAreas.map((area) => (
-          <div key={area.id} className="grid grid-cols-[1fr,2fr,auto] gap-4 p-4 border-b last:border-0">
+          <div key={area.id} className="grid grid-cols-[1fr,2fr,1fr,auto] gap-4 p-4 border-b last:border-0">
             <div>{area.title}</div>
             <div className="text-gray-600">{area.description}</div>
+            <div className="text-gray-600">{area.cf_product_id || '-'}</div>
             <div className="flex items-center space-x-2 w-24">
               <button
                 onClick={() => handleEdit(area)}

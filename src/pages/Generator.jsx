@@ -19,7 +19,8 @@ const initialFormData = {
   budgetMin: 5000,
   budgetMax: 15000,
   skillLevel: 'intermediate',
-  selectedInterest: 'dropshipping'
+  selectedInterest: '',
+  orderId: ''
 };
 
 export default function Generator({ isOpen, onClose }) {
@@ -71,7 +72,7 @@ export default function Generator({ isOpen, onClose }) {
     { title: 'Time Commitment', subtitle: 'Your time, your pace', icon: <TimeIcon /> },
     { title: 'Budget', subtitle: 'Share your budget', icon: <BudgetIcon /> },
     { title: 'Skill Level', subtitle: 'Your skills, your plan', icon: <SkillIcon /> },
-    { title: 'Interest Areas', subtitle: 'Share your passions', icon: <InterestIcon /> },
+    { title: 'Identification', subtitle: 'Order identification', icon: <InterestIcon /> },
     { title: 'Result', subtitle: 'Your tailored plan!', icon: <ResultIcon /> }
   ];
 
@@ -138,7 +139,12 @@ export default function Generator({ isOpen, onClose }) {
         return (
           <InterestAreasPage
             selectedInterest={formData.selectedInterest}
-            onInterestChange={(value) => setFormData(prev => ({ ...prev, selectedInterest: value }))}
+            orderId={formData.orderId}
+            onInterestChange={(value, orderId) => setFormData(prev => ({ 
+              ...prev, 
+              selectedInterest: value,
+              orderId: orderId
+            }))}
             onBack={handleBack}
             onNext={handleNext}
           />

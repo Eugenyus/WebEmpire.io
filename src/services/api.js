@@ -2,6 +2,7 @@ const API_URL = 'https://genisys.ro/smtp/';
 
 import { getTestEmailTemplate } from '../components/email/TestEmailTemplate';
 import { getPasswordResetTemplate } from '../components/email/PasswordResetTemplate';
+import { getRegistrationEmailTemplate } from '../components/email/RegistrationTemplate';
 import { createPasswordResetToken } from '../utils/passwordReset';
 
 export const sendEmail = async ({ name, email, html_message, subject }) => {
@@ -87,4 +88,22 @@ export const sendPasswordResetEmail = async (email) => {
   }
 };
 
-export { API_URL };
+export const sendRegistrationEmail = async (fullName, email, password, confirmationCode) => {
+  try {
+    const emailResult = await sendEmail({
+      name: 'WebEmpire Registration',
+      email,
+      subject: 'Welcome to Web Empire - Your Account Details',
+      html_message: getRegistrationEmailTemplate(fullName, email, password, confirmationCode)
+    });
+
+    if (!emailResult.success) {
+      throw new Error(emailResult.error || 'Failed to send registration email');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Registration email error:', error);
+    return { success: false, error: error.message };
+  }
+};
