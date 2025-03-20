@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import { updateUserInfo } from '../../utils/userUpdate';
 
 export default function UsersManagement() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,9 +50,19 @@ export default function UsersManagement() {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      if (error) throw error;
-      fetchUsers();
+      setError(null);
+
+      // Call the delete_user function
+      const { data, error } = await supabase.rpc('delete_user', {
+        p_user_id: userId
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Refresh the users list
+      await fetchUsers();
     } catch (err) {
       console.error('Error deleting user:', err);
       setError(err.message);
