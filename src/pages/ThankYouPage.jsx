@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../config/supabase';
+import { sendRegistrationEmail } from '../services/api';
 import Logo from '../components/Logo';
 
 export default function ThankYouPage() {
@@ -87,6 +88,11 @@ export default function ThankYouPage() {
         throw new Error('Password must be at least 8 characters long');
       }
 
+      // Generate confirmation code
+      const confirmationCode = Array.from({ length: 6 }, () => 
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
+      ).join('');
+
       // Create the user account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: sessionData.customer_email,
@@ -108,7 +114,8 @@ export default function ThankYouPage() {
           full_name: sessionData.full_name,
           email: sessionData.customer_email,
           role: 'user',
-          confirmation: 1,
+          confirmation: 0,
+          confirmation_code: confirmationCode,
           income_min: sessionData.income_min,
           income_max: sessionData.income_max,
           time_commitment: sessionData.time_commitment,
@@ -135,6 +142,19 @@ export default function ThankYouPage() {
         });
 
       if (dashboardError) throw dashboardError;
+
+      // Send confirmation email
+      const { success: emailSuccess, error: emailError } = await sendRegistrationEmail(
+        sessionData.full_name,
+        sessionData.customer_email,
+        password,
+        confirmationCode
+      );
+
+      if (!emailSuccess) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't throw here - we want to continue even if email fails
+      }
 
       setRegistrationComplete(true);
       
@@ -205,7 +225,7 @@ export default function ThankYouPage() {
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-4 text-center">Registration Complete!</h1>
               <p className="text-gray-600 mb-6 text-center">
-                Your account has been created successfully. You will be redirected to your workspace shortly.
+                Your account has been created successfully. Please check your email for the confirmation code.
               </p>
             </div>
           ) : (
