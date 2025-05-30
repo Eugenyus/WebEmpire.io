@@ -1,8 +1,0 @@
-export const SLIDER_CONFIG = {
-  MIN: 0,
-  MAX: 25000,
-  STEP: 100,
-  PRICE_GAP: 500,
-  DEFAULT_MIN: 5000,
-  DEFAULT_MAX: 15000
-};
