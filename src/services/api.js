@@ -3,12 +3,13 @@ const API_URL = 'https://genisys.ro/smtp/';
 import { getTestEmailTemplate } from '../components/email/TestEmailTemplate';
 import { getPasswordResetTemplate } from '../components/email/PasswordResetTemplate';
 import { getRegistrationEmailTemplate } from '../components/email/RegistrationTemplate';
+import { getConfirmationCodeEmailTemplate } from '../components/email/ConfirmationCodeTemplate';
 import { createPasswordResetToken } from '../utils/passwordReset';
 
 export const sendEmail = async ({ name, email, html_message, subject }) => {
   try {
     if (!email || !html_message || !subject) {
-      throw new Error('Missing required email fields');
+      throw new Error('Missing required fields');
     }
 
     const response = await fetch(API_URL, {
@@ -104,6 +105,26 @@ export const sendRegistrationEmail = async (fullName, email, password, confirmat
     return { success: true };
   } catch (error) {
     console.error('Registration email error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const sendConfirmationCodeEmail = async (fullName, email, confirmationCode) => {
+  try {
+    const emailResult = await sendEmail({
+      name: 'WebEmpire Confirmation',
+      email,
+      subject: 'Your Confirmation Code',
+      html_message: getConfirmationCodeEmailTemplate(fullName, confirmationCode)
+    });
+
+    if (!emailResult.success) {
+      throw new Error(emailResult.error || 'Failed to send confirmation code email');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Confirmation code email error:', error);
     return { success: false, error: error.message };
   }
 };
