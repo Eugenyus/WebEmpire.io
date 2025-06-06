@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../config/supabase';
-import { getWelcomeEmailTemplate } from '../utils/emailTemplates';
-import { sendEmail } from '../services/api';
+import { sendConfirmationCodeEmail } from '../services/api';
 
 export default function ConfirmationModal({ onConfirm }) {
   const [code, setCode] = useState('');
@@ -59,26 +58,22 @@ export default function ConfirmationModal({ onConfirm }) {
       // Get profile data
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('confirmation_code')
+        .select('confirmation_code, email, full_name')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
       if (profileError) throw profileError;
       if (!profile) throw new Error('Profile not found');
+      if (!profile.email) throw new Error('Email not found');
 
-      // Get email template
-      const emailData = getWelcomeEmailTemplate(
-        user.user_metadata?.full_name || 'User',
+      // Send confirmation code email
+      const { success, error: emailError } = await sendConfirmationCodeEmail(
+        profile.full_name || 'User',
+        profile.email,
         profile.confirmation_code
       );
 
-      // Add recipient email to the template data
-      emailData.to = user.email;
-
-      // Send email using Resend
-      const { success, error: emailError } = await sendEmail(emailData);
-
-      if (!success || emailError) {
+      if (!success) {
         throw new Error(emailError || 'Failed to send confirmation email');
       }
 
@@ -158,7 +153,7 @@ export default function ConfirmationModal({ onConfirm }) {
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <span>Resend confirmation code</span>

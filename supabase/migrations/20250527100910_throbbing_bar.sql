@@ -44,4 +44,3 @@ ON stripe_checkout_sessions(interest_area);
 
 CREATE INDEX idx_stripe_sessions_skill_level 
 ON stripe_checkout_sessions(skill_level);
-

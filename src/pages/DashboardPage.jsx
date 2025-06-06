@@ -684,7 +684,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Navigation Menu */}
-                      <div className="bg-white rounded-[10px] p-[10px] space-y-1">
+                      <div className="bg-white rounded-[10px] p-[10px] space-y-1 hidden">
                         {navigationItems.map((item, index) => (
                           <button
                             key={index}
@@ -736,21 +736,7 @@ export default function DashboardPage() {
               <span className="font-medium">Add An Income Stream</span>
             </button>
 
-            {/* Go Pro Section */}
-            <div className="mt-4 bg-[#1a1b2e] rounded-[10px] p-6 text-center h-[270px] flex flex-col justify-between">
-              <div className="flex-1 flex items-center justify-center">
-                <svg className="w-24 h-24" fill="none" viewBox="0 0 48 48" stroke="#10B981">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M36 28C39.3137 28 42 25.3137 42 22C42 18.6863 39.3137 16 36 16C35.8098 16 35.6215 16.0096 35.4355 16.0284C34.4779 12.5331 31.2793 10 27.5 10C24.7829 10 22.3577 11.4013 21 13.5C19.6423 11.4013 17.2171 10 14.5 10C9.80558 10 6 13.8056 6 18.5C6 23.1944 9.80558 27 14.5 27H16" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-white text-xl font-semibold mb-1">Go Pro</h3>
-                <p className="text-gray-400 text-sm mb-4">Check our pricing plans</p>
-                <button className="w-full bg-[#7C3AED] text-white py-2 rounded-lg hover:bg-opacity-90 transition-colors">
-                  View Pricing
-                </button>
-              </div>
-            </div>
+
           </div>
         </div>
 
@@ -815,7 +801,7 @@ export default function DashboardPage() {
                   </svg>
                 </button>
               </div>
-              <div className="bg-[#2a3350] rounded-xl p-1">
+              <div className="bg-[#2a3350] rounded-xl p-1 hidden">
                 <div className="flex justify-center gap-4">
                   {['🏆', '🌍', '🤝', '🎯'].map((emoji, index) => (
                     <div key={index} className="w-16 h-16 flex items-center justify-center text-2xl">
