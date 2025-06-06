@@ -1,16 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSupabase } from '../hooks/useSupabase';
 import { supabase } from '../config/supabase';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import Logo from '../components/Logo';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Roadmap from '../components/Roadmap/Roadmap';
-import Calendar from '../components/Calendar/alendar';
-import { useProfile } from '../hooks/useProfile';
-import { useDashboards } from '../hooks/useDashboards';
-import { useModules } from '../hooks/useModules';
-import { useNotifications } from '../hooks/useNotifications';
+import Calendar from '../components/Calendar/Calendar';
 
 // Interest areas constant
 const INTEREST_AREAS = [
@@ -88,18 +84,217 @@ const navigationItems = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { fullName, isConfirmed, profileId, error, isLoading, setIsConfirmed } = useProfile();
-  const { dashboards, activeDashboard, dashboardProgress, setDashboards, setActiveDashboard, setDashboardProgress, handleDashboardChange } = useDashboards(profileId);
-  const { modules, activeModule, setActiveModule } = useModules(activeDashboard);
-  const { notifications } = useNotifications(profileId);
-
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [expandedItem, setExpandedItem] = useState(1);
+  const [fullName, setFullName] = useState('');
+  const [isConfirmed, setIsConfirmed] = useState(true);
+  const [dashboards, setDashboards] = useState([]);
+  const [activeDashboard, setActiveDashboard] = useState(null);
   const [showInterestModal, setShowInterestModal] = useState(false);
   const [selectedNewInterest, setSelectedNewInterest] = useState(null);
+  const [isAddingStream, setIsAddingStream] = useState(false);
+  const [error, setError] = useState(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeletingDashboard, setIsDeletingDashboard] = useState(false);
+  const [dashboardProgress, setDashboardProgress] = useState({});
+  const [notifications, setNotifications] = useState([]);
+  const [profileId, setProfileId] = useState(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [modules, setModules] = useState([]);
+  const [activeModule, setActiveModule] = useState(null);
+
+  useEffect(() => {
+    const getProfile = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) throw userError;
+        
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        if (user.user_metadata?.full_name) {
+          setFullName(user.user_metadata.full_name);
+        }
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, selected_interest, confirmation')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profileError) throw profileError;
+        
+        if (profile) {
+          setProfileId(profile.id);
+          setIsConfirmed(profile.confirmation === 1);
+
+          const { data: dashboardsData, error: dashboardsError } = await supabase
+            .from('dashboards')
+            .select('*')
+            .eq('profile_id', profile.id);
+
+          if (dashboardsError) throw dashboardsError;
+
+          if (dashboardsData && dashboardsData.length > 0) {
+            setDashboards(dashboardsData);
+            setActiveDashboard(dashboardsData[0]);
+
+            // Fetch modules for the active dashboard
+            const { data: modulesData } = await supabase
+              .from('roadmap_modules')
+              .select('*')
+              .eq('interest_area_id', dashboardsData[0].interest_area)
+              .order('order_index');
+
+            setModules(modulesData || []);
+            if (modulesData?.length > 0) {
+              setActiveModule(modulesData[0].id);
+            }
+
+            // Fetch calendar notifications
+            const today = startOfDay(new Date());
+            const { data: calendarItems, error: calendarError } = await supabase
+              .from('user_calendar')
+              .select('*')
+              .eq('profile_id', profile.id)
+              .lte('date', endOfDay(today).toISOString())
+              .order('date');
+
+            if (calendarError) throw calendarError;
+
+            const sortedNotifications = (calendarItems || [])
+              .map(item => ({
+                ...item,
+                isOverdue: isBefore(new Date(item.date), today)
+              }))
+              .sort((a, b) => {
+                if (a.isOverdue && !b.isOverdue) return -1;
+                if (!a.isOverdue && b.isOverdue) return 1;
+                return new Date(a.date) - new Date(b.date);
+              });
+
+            setNotifications(sortedNotifications);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err.message);
+        setError('Failed to load profile data. Please try refreshing the page.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getProfile();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (activeDashboard) {
+      fetchModules();
+    }
+  }, [activeDashboard]);
+
+  const fetchModules = async () => {
+    try {
+      const { data: modulesData, error: modulesError } = await supabase
+        .from('roadmap_modules')
+        .select('*')
+        .eq('interest_area_id', activeDashboard.interest_area)
+        .order('order_index');
+
+      if (modulesError) throw modulesError;
+
+      setModules(modulesData || []);
+      if (modulesData?.length > 0) {
+        setActiveModule(modulesData[0].id);
+      }
+    } catch (err) {
+      console.error('Error fetching modules:', err);
+      setError(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (!profileId) return;
+
+    // Subscribe to calendar changes
+    const channel = supabase
+      .channel('calendar_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_calendar',
+          filter: `profile_id=eq.${profileId}`
+        },
+        handleCalendarChange
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profileId]);
+
+  const handleCalendarChange = (payload) => {
+    const today = startOfDay(new Date());
+
+    switch (payload.eventType) {
+      case 'INSERT': {
+        const newItem = {
+          ...payload.new,
+          isOverdue: isBefore(new Date(payload.new.date), today)
+        };
+        
+        if (!isAfter(new Date(newItem.date), today)) {
+          setNotifications(prev => {
+            const newNotifications = [...prev, newItem].sort((a, b) => {
+              if (a.isOverdue && !b.isOverdue) return -1;
+              if (!a.isOverdue && b.isOverdue) return 1;
+              return new Date(a.date) - new Date(b.date);
+            });
+            return newNotifications;
+          });
+        }
+        break;
+      }
+      case 'DELETE':
+        setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+        break;
+      case 'UPDATE': {
+        const updatedItem = {
+          ...payload.new,
+          isOverdue: isBefore(new Date(payload.new.date), today)
+        };
+        
+        setNotifications(prev => {
+          const filtered = prev.filter(n => n.id !== payload.new.id);
+          if (!isAfter(new Date(updatedItem.date), today)) {
+            filtered.push(updatedItem);
+          }
+          return filtered.sort((a, b) => {
+            if (a.isOverdue && !b.isOverdue) return -1;
+            if (!a.isOverdue && b.isOverdue) return 1;
+            return new Date(a.date) - new Date(b.date);
+          });
+        });
+        break;
+      }
+    }
+  };
 
   const handleAddNewStream = async () => {
     if (!selectedNewInterest) return;
+
+    setIsAddingStream(true);
+    setError(null);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -141,6 +336,8 @@ export default function DashboardPage() {
       setError(null);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsAddingStream(false);
     }
   };
 
@@ -155,6 +352,9 @@ export default function DashboardPage() {
     }
 
     try {
+      setIsDeletingDashboard(true);
+      setError(null);
+      
       const { error: deleteError } = await supabase
         .from('dashboards')
         .delete()
@@ -168,6 +368,30 @@ export default function DashboardPage() {
       setShowRemoveModal(false);
     } catch (err) {
       console.error('Error removing dashboard:', err.message);
+      setError(err.message);
+    } finally {
+      setIsDeletingDashboard(false);
+    }
+  };
+
+  const handleDashboardChange = async (dashboard) => {
+    setActiveDashboard(dashboard);
+    setIsExpanded(true);
+    setShowMobileMenu(false);
+    
+    try {
+      const { data: modulesData } = await supabase
+        .from('roadmap_modules')
+        .select('*')
+        .eq('interest_area_id', dashboard.interest_area)
+        .order('order_index');
+
+      setModules(modulesData || []);
+      if (modulesData?.length > 0) {
+        setActiveModule(modulesData[0].id);
+      }
+    } catch (err) {
+      console.error('Error fetching modules:', err);
       setError(err.message);
     }
   };
@@ -254,14 +478,16 @@ export default function DashboardPage() {
               <button
                 onClick={() => setShowRemoveModal(false)}
                 className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={isDeletingDashboard}
               >
                 Cancel
               </button>
               <button
                 onClick={handleRemoveDashboard}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+                disabled={isDeletingDashboard || dashboards.length <= 1}
               >
-                Remove
+                {isDeletingDashboard ? 'Removing...' : 'Remove'}
               </button>
             </div>
           </div>
@@ -302,12 +528,14 @@ export default function DashboardPage() {
             <div className="mt-6 flex justify-between items-center">
               <button
                 onClick={handleAddNewStream}
-                disabled={!selectedNewInterest}
+                disabled={!selectedNewInterest || isAddingStream}
                 className={`px-6 py-2 rounded-lg font-medium ${
-                  !selectedNewInterest ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#10B981] text-white hover:bg-opacity-90'
+                  !selectedNewInterest || isAddingStream
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-[#10B981] text-white hover:bg-opacity-90'
                 }`}
               >
-                Add New Income Stream
+                {isAddingStream ? 'Adding...' : 'Add New Income Stream'}
               </button>
               <button
                 onClick={() => {
@@ -316,6 +544,7 @@ export default function DashboardPage() {
                   setError(null);
                 }}
                 className="px-6 py-2 border border-gray-300 rounded-lg"
+                disabled={isAddingStream}
               >
                 Cancel
               </button>
@@ -374,7 +603,7 @@ export default function DashboardPage() {
                 title="Sign Out"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 11-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
             </div>
